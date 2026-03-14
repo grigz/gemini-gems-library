@@ -2,6 +2,8 @@
 
 A web-based catalog application for managing and sharing Google Gemini custom gems (system prompts) within your team. Built as a Google Apps Script web app with Google Sheets as the data backend.
 
+![Gemini Gems Catalog Main Interface](Screenshot1.jpg)
+
 ## Features
 
 - **Gem Management**: Create, read, update, and delete Gemini gems

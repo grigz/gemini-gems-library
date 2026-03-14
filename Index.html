@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YOUR_TEAM_NAME Gemini Gems Catalog</title>
+  <?!= include('Styles'); ?>
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <h1>YOUR_TEAM_NAME Gemini Gems Catalog</h1>
+      <div class="header-buttons">
+        <button id="addGemBtn" class="btn btn-primary">+ Add Gem</button>
+        <button id="exportCsvBtn" class="btn btn-secondary">Export CSV</button>
+        <button id="exportJsonBtn" class="btn btn-secondary">Export JSON</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Loading State -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+      <div class="loading-spinner"></div>
+      <p>Loading...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <h2>No gems yet</h2>
+      <p>Start building your team's gem library by adding your first gem!</p>
+      <button id="addFirstGemBtn" class="btn btn-primary">+ Add Your First Gem</button>
+    </div>
+
+    <!-- Gems Grid -->
+    <div id="gemsGrid" class="gems-grid"></div>
+
+    <!-- Message Banner -->
+    <div id="messageBanner" class="message-banner" style="display: none;"></div>
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <div id="gemModal" class="modal" style="display: none;">
+    <div id="modalBackdrop" class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Gem</h2>
+        <button id="modalCloseBtn" class="modal-close">&times;</button>
+      </div>
+      <form id="gemForm">
+        <input type="hidden" id="gemId" name="gemId">
+
+        <div class="form-group">
+          <label for="title">Title <span class="required">*</span></label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            required
+            maxlength="100"
+            placeholder="e.g., Marketing Content Writer">
+        </div>
+
+        <div class="form-group">
+          <label for="shortDescription">Short Description <span class="required">*</span></label>
+          <textarea
+            id="shortDescription"
+            name="shortDescription"
+            required
+            maxlength="200"
+            rows="2"
+            placeholder="Brief description shown on the card (max 200 chars)"></textarea>
+          <small class="char-count"><span id="descCharCount">0</span>/200</small>
+        </div>
+
+        <div class="form-group">
+          <label for="version">Version <span class="required">*</span></label>
+          <input
+            type="text"
+            id="version"
+            name="version"
+            required
+            maxlength="20"
+            placeholder="e.g., 1.0, v2.1, beta">
+        </div>
+
+        <div class="form-group">
+          <label for="fullPrompt">Full Prompt <span class="required">*</span></label>
+          <textarea
+            id="fullPrompt"
+            name="fullPrompt"
+            required
+            rows="10"
+            placeholder="Enter the complete system prompt for this gem..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="sharedUrl">Shared Gem URL <span class="required">*</span></label>
+          <input
+            type="url"
+            id="sharedUrl"
+            name="sharedUrl"
+            required
+            placeholder="https://g.co/gemini/share/...">
+          <small>The shareable link to try this gem in Gemini</small>
+        </div>
+
+        <div class="form-group">
+          <label>Files Used (Optional)</label>
+          <small>Add files associated with this gem (max 10). URLs must start with http:// or https://</small>
+          <div id="filesContainer">
+            <!-- File rows will be added here dynamically -->
+          </div>
+          <button type="button" class="btn btn-secondary btn-small" id="addFileBtn">
+            + Add File
+          </button>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Gem</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <?!= include('Script'); ?>
+</body>
+</html>

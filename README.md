@@ -1,201 +1,208 @@
-# Gemini Gems Catalog
+# Gemini Gem and NotebookLM Catalog
 
-A web-based catalog application for managing and sharing Google Gemini custom gems (system prompts) within your team. Built as a Google Apps Script web app with Google Sheets as the data backend.
-
-![Gemini Gems Catalog Main Interface](Screenshot1.jpg)
+A Google Apps Script web application for cataloging and sharing Gemini Gems and NotebookLM notebooks within your organization.
 
 ## Features
 
-- **Gem Management**: Create, read, update, and delete Gemini gems
-- **File Tracking**: Associate up to 10 files (with URLs) per gem
-- **Version Control**: Track gem versions and edit history
-- **Audit Trail**: Automatic tracking of who created/edited gems and when
-- **Export**: Download your gem catalog as CSV or JSON
-- **Clean UI**: Red Hat-inspired design with expandable prompt views
-- **Unsaved Changes Protection**: Warns before closing forms with unsaved data
-- **URL Validation**: Validates file URLs before saving
+- **Dual Entry Types**: Support for both Gemini Gems and NotebookLM notebooks
+- **Rich Metadata**: Track versions, descriptions, prompts, and associated files
+- **User Authentication**: Tracks who created and edited each entry
+- **Admin Permissions**: Role-based access control for delete operations
+- **File Attachments**: Link up to 10 files per entry
+- **Export Options**: Export catalog as CSV or JSON
+- **Responsive Design**: Works on desktop and mobile devices
 
-## Prerequisites
-
-- Google Account
-- Access to Google Sheets
-- Access to Google Apps Script
-
-## Installation
+## Setup Instructions
 
 ### 1. Create a Google Sheet
 
-1. Go to [Google Sheets](https://sheets.google.com)
-2. Create a new spreadsheet
-3. Add the following column headers in row 1:
-   - A: `Title`
-   - B: `Short Description`
-   - C: `Version`
-   - D: `Full Prompt`
-   - E: `Shared URL`
-   - F: `Created By`
-   - G: `Created Date`
-   - H: `Last Edited By`
-   - I: `Last Edited Date`
-   - J: `Files`
-4. Note the Sheet ID from the URL (the long string between `/d/` and `/edit`)
+1. Create a new Google Sheet
+2. Add these column headers in row 1:
+   - A1: Title
+   - B1: Short Description
+   - C1: Version
+   - D1: Full Prompt
+   - E1: Shared URL
+   - F1: Created By
+   - G1: Created Date
+   - H1: Last Edited By
+   - I1: Last Edited Date
+   - J1: Files
+   - K1: Entry Type
+
+3. Copy the Sheet ID from the URL (the long string between `/d/` and `/edit`)
    - Example: `https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit`
 
-### 2. Create Google Apps Script Project
+### 2. Create the Apps Script Project
 
-1. Go to [Google Apps Script](https://script.google.com)
-2. Click **New Project**
-3. Delete the default `Code.gs` content
+1. In your Google Sheet, go to **Extensions > Apps Script**
+2. Delete the default `Code.gs` content
+3. Create the following files with their corresponding content from this directory:
+   - `Code.gs`
+   - `AuthService.gs`
+   - `SheetService.gs`
+   - `Index.html`
+   - `Script.html`
+   - `Styles.html`
 
-### 3. Add Project Files
+4. In `SheetService.gs`, replace `YOUR_GOOGLE_SHEET_ID_HERE` with your actual Sheet ID
 
-Create the following files in your Apps Script project (click the + next to Files):
+### 3. Initialize Admin Users
 
-#### Server-Side Files (.gs)
+1. In the Apps Script editor, select `setupInitialAdmin` from the function dropdown
+2. Click the Run button (▶️)
+3. Authorize the script when prompted
+4. Check the execution log to verify your email was added
 
-1. **Code.gs** - Copy content from `Code.gs`
-2. **AuthService.gs** - Copy content from `AuthService.gs`
-3. **SheetService.gs** - Copy content from `SheetService.gs`
-4. **config.gs** - Copy `config.example.gs`, rename to `config.gs`, and add your Sheet ID
+### 4. Deploy as Web App
 
-#### Client-Side Files (.html)
-
-1. **Index.html** - Copy content from `Index.html`
-2. **Styles.html** - Copy content from `Styles.html`
-3. **Script.html** - Copy content from `Script.html`
-
-### 4. Configure Your Sheet ID
-
-1. Copy `config.example.gs` to a new file named `config.gs`
-2. Replace `YOUR_GOOGLE_SHEET_ID_HERE` with your actual Sheet ID from step 1
-3. Save the file
-
-### 5. Deploy as Web App
-
-1. Click **Deploy** → **New deployment**
-2. Click the gear icon → Select **Web app**
-3. Configure:
-   - **Description**: "Gemini Gems Catalog v1.0"
-   - **Execute as**: Me
-   - **Who has access**: Anyone with Google account (or your preferred setting)
+1. Click **Deploy > New deployment**
+2. Select type: **Web app**
+3. Configure settings:
+   - Description: "Gem and Notebook Catalog"
+   - Execute as: **Me**
+   - Who has access: **Anyone with Google account** (or your organization)
 4. Click **Deploy**
-5. Authorize the app when prompted
-6. Copy the web app URL
+5. Copy the web app URL
 
-### 6. Customize (Optional)
+### 5. Share with Your Team
 
-In `Index.html`, replace `YOUR_TEAM_NAME` with your actual team name:
-```html
-<h1>YOUR_TEAM_NAME Gemini Gems Catalog</h1>
-```
+Share the web app URL with your team members. The first time they access it, they'll need to authorize the app.
+
+## Admin Management
+
+### Initial Admin Setup
+
+The person who runs `setupInitialAdmin()` becomes the first admin.
+
+### Adding More Admins
+
+1. Login as an admin
+2. Click **⚙ Admin Settings** in the header
+3. Enter the email address of the user you want to add
+4. Click **Add**
+
+### Removing Admins
+
+1. Open **⚙ Admin Settings**
+2. Click **Remove** next to the user you want to remove
+3. Note: You cannot remove the last admin (prevents lockout)
 
 ## Usage
 
 ### Adding a Gem
 
-1. Click **+ Add Gem**
-2. Fill in:
-   - **Title**: Name of your gem
-   - **Short Description**: Brief summary (max 200 chars)
-   - **Version**: Version number (e.g., 1.0, v2.1)
-   - **Full Prompt**: Complete system instructions
-   - **Shared Gem URL**: Link to your shared Gemini gem
-   - **Files** (optional): Add up to 10 files with names and URLs
-3. Click **Save Gem**
+1. Click **+ Add New Item**
+2. Select **Gemini Gem** as the entry type
+3. Fill in:
+   - Title
+   - Short Description (max 200 chars)
+   - Version (e.g., "1.0", "v2.1")
+   - Full Prompt (the complete system prompt)
+   - Shared Gem URL (from Gemini)
+4. Optionally add related files (max 10)
+5. Click **Save Gem**
 
-### Viewing Gems
+### Adding a NotebookLM Entry
 
-- Cards display title, version, description, and metadata
-- Click **Show Full Prompt** to expand and view the complete prompt and associated files
-- Click **Try Now** to open the gem in Gemini
+1. Click **+ Add New Item**
+2. Select **NotebookLM** as the entry type
+3. Fill in:
+   - Title
+   - Short Description (max 200 chars)
+   - NotebookLM URL
+4. Optionally add related files
+5. Click **Save Gem**
 
-### Editing & Deleting
+### Editing Entries
 
-- Click **Edit** to modify a gem
-- Click **Delete** to remove a gem (requires confirmation)
+1. Find the entry you want to edit
+2. Click the **Edit** button
+3. Make your changes
+4. Click **Save Gem**
 
-### Exporting
+### Deleting Entries (Admin Only)
 
-- Click **Export CSV** to download all gems as a CSV file
-- Click **Export JSON** to download all gems as JSON
+1. Find the entry you want to delete
+2. Click the **Delete** button (only visible to admins)
+3. Confirm the deletion
 
-## Technical Architecture
+## Customization
 
-- **Backend**: Google Apps Script (server-side JavaScript)
-- **Database**: Google Sheets (structured data storage)
-- **Frontend**: HTML/CSS/JavaScript (client-side)
-- **Authentication**: Google OAuth (automatic via Apps Script)
-- **Hosting**: Google Apps Script Web App
+### Branding
+
+Edit the following in `Styles.html` to match your brand:
+
+```css
+:root {
+  --primary-color: #009596;        /* Main brand color */
+  --primary-dark: #007a7b;         /* Darker shade for hover states */
+  --secondary-color: #EC7A08;      /* Accent/warning color */
+  --accent-color: #7551A6;         /* Badge color */
+  /* ... */
+}
+```
+
+### Application Title
+
+Edit `Code.gs` to change the app title:
+
+```javascript
+.setTitle('Your Custom Title Here')
+```
+
+Edit `Index.html` to change the header:
+
+```html
+<h1>Your Custom Title Here</h1>
+```
+
+## Security Features
+
+- **Backend Validation**: Delete permission checked server-side (cannot be bypassed)
+- **Frontend UI**: Delete buttons hidden from non-admins
+- **Audit Trail**: All entries track who created and last edited them
+- **Admin List Protection**: Stored in Script Properties (not accessible to users)
+- **Last Admin Protection**: Cannot remove the final admin user
 
 ## File Structure
 
 ```
-├── Code.gs               # Main entry point and template rendering
-├── AuthService.gs        # User authentication and email capture
-├── SheetService.gs       # Database operations (CRUD)
-├── config.example.gs     # Configuration template
-├── Index.html            # HTML structure and layout
-├── Styles.html           # CSS styling (Red Hat design system)
-├── Script.html           # Client-side JavaScript logic
-└── README.md             # This file
+├── Code.gs            # Entry point and setup
+├── AuthService.gs     # User authentication and admin management
+├── SheetService.gs    # Data layer (CRUD operations)
+├── Index.html         # Main HTML structure
+├── Script.html        # Client-side JavaScript
+├── Styles.html        # CSS styles
+└── README.md          # This file
 ```
-
-## Data Model
-
-Each gem is stored as a row in Google Sheets with the following columns:
-
-| Column | Type | Description |
-|--------|------|-------------|
-| Title | String | Gem name |
-| Short Description | String | Brief summary (max 200 chars) |
-| Version | String | Version identifier |
-| Full Prompt | Text | Complete system instructions |
-| Shared URL | URL | Link to shared Gemini gem |
-| Created By | Email | Auto-populated from user session |
-| Created Date | DateTime | Auto-populated timestamp |
-| Last Edited By | Email | Auto-updated on changes |
-| Last Edited Date | DateTime | Auto-updated on changes |
-| Files | JSON | Array of {name, link} objects |
-
-## Security Considerations
-
-- All user input is HTML-escaped to prevent XSS attacks
-- URL validation ensures file links are valid http/https URLs
-- Sheet ID is stored in a separate config file (add to .gitignore)
-- Access controlled via Google Apps Script deployment settings
-
-## Browser Compatibility
-
-- Chrome/Edge (recommended)
-- Firefox
-- Safari
-- Mobile browsers (responsive design)
 
 ## Troubleshooting
 
-### "Unable to access spreadsheet" error
-- Verify your Sheet ID in `config.gs` is correct
-- Ensure the script has permission to access the sheet
-- Re-authorize the app if needed
+### "Script function not found" error
 
-### Blank page or JavaScript errors
-- Hard refresh your browser (Ctrl+Shift+R or Cmd+Shift+R)
-- Clear browser cache
-- Check browser console for specific errors
-- Verify all .html files were copied completely
+Make sure all files are created in the Apps Script project and saved.
+
+### Admin Settings button not showing
+
+1. Verify you ran `setupInitialAdmin()` in the Apps Script editor
+2. Check Script Properties (**Project Settings > Script Properties**) for `ADMIN_USERS`
+3. Redeploy the web app with a **New version**
+4. Clear browser cache or open in incognito mode
+
+### Cannot delete entries
+
+Only admin users can delete entries. Check admin list in **Admin Settings**.
 
 ### Changes not appearing
-- Create a new deployment version after code changes
-- Use incognito/private browsing to test (avoids caching)
 
-## Contributing
-
-This is a standalone project. Feel free to fork and customize for your team's needs.
+After editing code in Apps Script:
+1. Click **Deploy > Manage deployments**
+2. Click **Edit** on your deployment
+3. Select **New version**
+4. Click **Deploy**
+5. Refresh the web app (hard refresh: Ctrl+Shift+R or Cmd+Shift+R)
 
 ## License
 
-MIT License - See LICENSE file for details
-
-## Credits
-
-Built with Google Apps Script, Google Sheets, and inspiration from Red Hat's design system.
+This code is provided as-is for use within your organization.

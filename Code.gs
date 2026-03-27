@@ -11,7 +11,7 @@
 function doGet(e) {
   return HtmlService.createTemplateFromFile('Index')
     .evaluate()
-    .setTitle('Gemini Gems Catalog')
+    .setTitle('Gem and Notebook Catalog')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
@@ -22,4 +22,26 @@ function doGet(e) {
  */
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+/**
+ * One-time setup to initialize admin list
+ * Run this manually from Script Editor to set initial admin
+ */
+function setupInitialAdmin() {
+  const currentUserEmail = Session.getActiveUser().getEmail();
+  const props = PropertiesService.getScriptProperties();
+
+  // Check if admin list already exists
+  const existingAdmins = props.getProperty('ADMIN_USERS');
+  if (existingAdmins) {
+    Logger.log('Admin list already exists: ' + existingAdmins);
+    return;
+  }
+
+  // Initialize with current user as first admin
+  const adminList = [currentUserEmail];
+  props.setProperty('ADMIN_USERS', JSON.stringify(adminList));
+
+  Logger.log('Initialized admin list with: ' + currentUserEmail);
 }

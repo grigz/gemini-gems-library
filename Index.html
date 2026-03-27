@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YOUR_TEAM_NAME Gemini Gems Catalog</title>
+  <title>Gem and Notebook Catalog</title>
   <?!= include('Styles'); ?>
 </head>
 <body>
   <!-- Header -->
   <header class="app-header">
     <div class="header-content">
-      <h1>YOUR_TEAM_NAME Gemini Gems Catalog</h1>
+      <h1>Gem and Notebook Catalog</h1>
       <div class="header-buttons">
-        <button id="addGemBtn" class="btn btn-primary">+ Add Gem</button>
+        <button id="addGemBtn" class="btn btn-primary">+ Add New Item</button>
+        <button id="adminSettingsBtn" class="btn btn-secondary" style="display: none;">⚙ Admin Settings</button>
         <button id="exportCsvBtn" class="btn btn-secondary">Export CSV</button>
         <button id="exportJsonBtn" class="btn btn-secondary">Export JSON</button>
       </div>
@@ -29,9 +30,9 @@
 
     <!-- Empty State -->
     <div id="emptyState" class="empty-state" style="display: none;">
-      <h2>No gems yet</h2>
-      <p>Start building your team's gem library by adding your first gem!</p>
-      <button id="addFirstGemBtn" class="btn btn-primary">+ Add Your First Gem</button>
+      <h2>No items yet</h2>
+      <p>Start building your team's catalog by adding your first gem or notebook!</p>
+      <button id="addFirstGemBtn" class="btn btn-primary">+ Add Your First Item</button>
     </div>
 
     <!-- Gems Grid -->
@@ -51,6 +52,20 @@
       </div>
       <form id="gemForm">
         <input type="hidden" id="gemId" name="gemId">
+
+        <div class="form-group">
+          <label>Entry Type <span class="required">*</span></label>
+          <div class="entry-type-selector">
+            <label class="radio-label">
+              <input type="radio" name="entryType" value="gem" checked>
+              <span>Gemini Gem</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="entryType" value="notebook">
+              <span>NotebookLM</span>
+            </label>
+          </div>
+        </div>
 
         <div class="form-group">
           <label for="title">Title <span class="required">*</span></label>
@@ -75,7 +90,7 @@
           <small class="char-count"><span id="descCharCount">0</span>/200</small>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="versionGroup">
           <label for="version">Version <span class="required">*</span></label>
           <input
             type="text"
@@ -86,7 +101,7 @@
             placeholder="e.g., 1.0, v2.1, beta">
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="fullPromptGroup">
           <label for="fullPrompt">Full Prompt <span class="required">*</span></label>
           <textarea
             id="fullPrompt"
@@ -96,7 +111,7 @@
             placeholder="Enter the complete system prompt for this gem..."></textarea>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="sharedUrlGroup">
           <label for="sharedUrl">Shared Gem URL <span class="required">*</span></label>
           <input
             type="url"
@@ -105,6 +120,16 @@
             required
             placeholder="https://g.co/gemini/share/...">
           <small>The shareable link to try this gem in Gemini</small>
+        </div>
+
+        <div class="form-group" id="notebookUrlGroup" style="display: none;">
+          <label for="notebookUrl">NotebookLM URL <span class="required">*</span></label>
+          <input
+            type="url"
+            id="notebookUrl"
+            name="notebookUrl"
+            placeholder="https://notebooklm.google.com/...">
+          <small>The link to your NotebookLM notebook</small>
         </div>
 
         <div class="form-group">
@@ -123,6 +148,39 @@
           <button type="submit" class="btn btn-primary">Save Gem</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Admin Settings Modal -->
+  <div id="adminModal" class="modal" style="display: none;">
+    <div id="adminModalBackdrop" class="modal-backdrop"></div>
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>Admin Settings</h2>
+        <button id="adminModalCloseBtn" class="modal-close">&times;</button>
+      </div>
+      <div style="padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;">Admin Users</h3>
+        <p style="color: var(--gray-700); margin-bottom: 1rem; font-size: 0.875rem;">
+          Users listed below can delete entries from the catalog.
+        </p>
+
+        <div id="adminListContainer" style="margin-bottom: 1.5rem;">
+          <!-- Admin list will be populated here -->
+        </div>
+
+        <div class="form-group">
+          <label for="newAdminEmail">Add New Admin</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input
+              type="email"
+              id="newAdminEmail"
+              placeholder="user@example.com"
+              style="flex: 1;">
+            <button id="addAdminBtn" class="btn btn-primary">Add</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

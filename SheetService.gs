@@ -1,9 +1,6 @@
 /**
  * SheetService.gs - Data Access Layer
  * All Google Sheet CRUD operations for gems
- *
- * NOTE: SHEET_ID is defined in config.gs
- * Make sure to create config.gs from config.example.gs before deploying
  */
 
 // Column index constants (0-based)
@@ -17,6 +14,10 @@ const COL_CREATED_DATE = 6;
 const COL_LAST_EDITED_BY = 7;
 const COL_LAST_EDITED_DATE = 8;
 const COL_FILES = 9;
+const COL_ENTRY_TYPE = 10;
+
+// Google Sheet ID - Replace with your own Google Sheet ID
+const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE';
 
 /**
  * Get the spreadsheet object
@@ -68,8 +69,8 @@ function getAllGems() {
 }
 
 /**
- * Create a new gem
- * @param {Object} gemData - The gem data to create
+ * Create a new entry (gem or notebook)
+ * @param {Object} gemData - The entry data to create
  * @return {Object} Response object with success status
  */
 function createGem(gemData) {
@@ -77,17 +78,28 @@ function createGem(gemData) {
     const sheet = getSpreadsheet();
     const userEmail = getUserEmail();
     const timestamp = new Date();
+    const entryType = gemData.entryType || 'gem';
 
-    // Validate required fields
-    if (!gemData.title || !gemData.shortDescription || !gemData.version ||
-        !gemData.fullPrompt || !gemData.sharedUrl) {
-      return { success: false, data: null, error: 'All fields are required' };
+    // Validate common required fields
+    if (!gemData.title || !gemData.shortDescription) {
+      return { success: false, data: null, error: 'Title and description are required' };
+    }
+
+    // Type-specific validation
+    if (entryType === 'gem') {
+      if (!gemData.version || !gemData.fullPrompt || !gemData.sharedUrl) {
+        return { success: false, data: null, error: 'All gem fields are required' };
+      }
+    } else if (entryType === 'notebook') {
+      if (!gemData.notebookUrl) {
+        return { success: false, data: null, error: 'NotebookLM URL is required' };
+      }
     }
 
     // Validate files array (optional)
     const files = gemData.files || [];
     if (files.length > 10) {
-      return { success: false, data: null, error: 'Maximum 10 files allowed per gem' };
+      return { success: false, data: null, error: 'Maximum 10 files allowed per entry' };
     }
 
     // Validate each file has required fields
@@ -100,29 +112,30 @@ function createGem(gemData) {
     const newRow = [
       gemData.title,
       gemData.shortDescription,
-      gemData.version,
-      gemData.fullPrompt,
-      gemData.sharedUrl,
-      userEmail,           // Created By
-      timestamp,           // Created Date
-      userEmail,           // Last Edited By
-      timestamp,           // Last Edited Date
-      JSON.stringify(files) // Files (JSON array)
+      gemData.version || '',           // Version (optional for notebooks)
+      gemData.fullPrompt || '',        // Full prompt (empty for notebooks)
+      entryType === 'gem' ? gemData.sharedUrl : gemData.notebookUrl, // URL
+      userEmail,                       // Created By
+      timestamp,                       // Created Date
+      userEmail,                       // Last Edited By
+      timestamp,                       // Last Edited Date
+      JSON.stringify(files),           // Files (JSON array)
+      entryType                        // Entry Type
     ];
 
     sheet.appendRow(newRow);
 
-    return { success: true, data: { message: 'Gem created successfully' }, error: null };
+    return { success: true, data: { message: 'Entry created successfully' }, error: null };
   } catch (error) {
-    Logger.log('Error creating gem: ' + error.toString());
+    Logger.log('Error creating entry: ' + error.toString());
     return { success: false, data: null, error: error.toString() };
   }
 }
 
 /**
- * Update an existing gem
+ * Update an existing entry (gem or notebook)
  * @param {number} rowId - The row number (1-based)
- * @param {Object} gemData - The updated gem data
+ * @param {Object} gemData - The updated entry data
  * @return {Object} Response object with success status
  */
 function updateGem(rowId, gemData) {
@@ -130,17 +143,28 @@ function updateGem(rowId, gemData) {
     const sheet = getSpreadsheet();
     const userEmail = getUserEmail();
     const timestamp = new Date();
+    const entryType = gemData.entryType || 'gem';
 
-    // Validate required fields
-    if (!gemData.title || !gemData.shortDescription || !gemData.version ||
-        !gemData.fullPrompt || !gemData.sharedUrl) {
-      return { success: false, data: null, error: 'All fields are required' };
+    // Validate common required fields
+    if (!gemData.title || !gemData.shortDescription) {
+      return { success: false, data: null, error: 'Title and description are required' };
+    }
+
+    // Type-specific validation
+    if (entryType === 'gem') {
+      if (!gemData.version || !gemData.fullPrompt || !gemData.sharedUrl) {
+        return { success: false, data: null, error: 'All gem fields are required' };
+      }
+    } else if (entryType === 'notebook') {
+      if (!gemData.notebookUrl) {
+        return { success: false, data: null, error: 'NotebookLM URL is required' };
+      }
     }
 
     // Validate files array (optional)
     const files = gemData.files || [];
     if (files.length > 10) {
-      return { success: false, data: null, error: 'Maximum 10 files allowed per gem' };
+      return { success: false, data: null, error: 'Maximum 10 files allowed per entry' };
     }
 
     // Validate each file has required fields
@@ -150,53 +174,64 @@ function updateGem(rowId, gemData) {
       }
     }
 
-    // Get existing row to preserve created fields
-    const existingData = sheet.getRange(rowId, 1, 1, 10).getValues()[0];
+    // Get existing row to preserve created fields (11 columns now)
+    const existingData = sheet.getRange(rowId, 1, 1, 11).getValues()[0];
 
     const updatedRow = [
       gemData.title,
       gemData.shortDescription,
-      gemData.version,
-      gemData.fullPrompt,
-      gemData.sharedUrl,
-      existingData[COL_CREATED_BY],      // Preserve Created By
-      existingData[COL_CREATED_DATE],    // Preserve Created Date
-      userEmail,                          // Update Last Edited By
-      timestamp,                          // Update Last Edited Date
-      JSON.stringify(files)               // Files (JSON array)
+      gemData.version || '',                        // Version (optional for notebooks)
+      gemData.fullPrompt || '',                     // Full prompt (empty for notebooks)
+      entryType === 'gem' ? gemData.sharedUrl : gemData.notebookUrl, // URL
+      existingData[COL_CREATED_BY],                 // Preserve Created By
+      existingData[COL_CREATED_DATE],               // Preserve Created Date
+      userEmail,                                     // Update Last Edited By
+      timestamp,                                     // Update Last Edited Date
+      JSON.stringify(files),                        // Files (JSON array)
+      entryType                                      // Entry Type
     ];
 
-    sheet.getRange(rowId, 1, 1, 10).setValues([updatedRow]);
+    sheet.getRange(rowId, 1, 1, 11).setValues([updatedRow]);
 
-    return { success: true, data: { message: 'Gem updated successfully' }, error: null };
+    return { success: true, data: { message: 'Entry updated successfully' }, error: null };
   } catch (error) {
-    Logger.log('Error updating gem: ' + error.toString());
+    Logger.log('Error updating entry: ' + error.toString());
     return { success: false, data: null, error: error.toString() };
   }
 }
 
 /**
- * Delete a gem
+ * Delete a gem (admin only)
  * @param {number} rowId - The row number (1-based)
  * @return {Object} Response object with success status
  */
 function deleteGem(rowId) {
+  // Check if user is admin
+  if (!isUserAdmin()) {
+    Logger.log('Unauthorized delete attempt by: ' + getUserEmail());
+    return {
+      success: false,
+      data: null,
+      error: 'Only administrators can delete entries'
+    };
+  }
+
   try {
     const sheet = getSpreadsheet();
     sheet.deleteRow(rowId);
 
-    return { success: true, data: { message: 'Gem deleted successfully' }, error: null };
+    return { success: true, data: { message: 'Entry deleted successfully' }, error: null };
   } catch (error) {
-    Logger.log('Error deleting gem: ' + error.toString());
+    Logger.log('Error deleting entry: ' + error.toString());
     return { success: false, data: null, error: error.toString() };
   }
 }
 
 /**
- * Format row data as a gem object
+ * Format row data as an entry object (gem or notebook)
  * @param {Array} rowData - The row data from the sheet
  * @param {number} rowIndex - The row number (1-based)
- * @return {Object} Formatted gem object
+ * @return {Object} Formatted entry object
  */
 function formatGemObject(rowData, rowIndex) {
   // Parse files JSON safely
@@ -210,17 +245,32 @@ function formatGemObject(rowData, rowIndex) {
     files = [];
   }
 
-  return {
+  // Get entry type, default to 'gem' for backward compatibility
+  const entryType = rowData[COL_ENTRY_TYPE] || 'gem';
+
+  // Base object with common fields
+  const baseObject = {
     id: rowIndex,
     title: rowData[COL_TITLE] || '',
     shortDescription: rowData[COL_SHORT_DESC] || '',
-    version: rowData[COL_VERSION] || '',
-    fullPrompt: rowData[COL_FULL_PROMPT] || '',
-    sharedUrl: rowData[COL_SHARED_URL] || '',
+    entryType: entryType,
     createdBy: rowData[COL_CREATED_BY] || '',
     createdDate: rowData[COL_CREATED_DATE] ? new Date(rowData[COL_CREATED_DATE]).toISOString() : '',
     lastEditedBy: rowData[COL_LAST_EDITED_BY] || '',
     lastEditedDate: rowData[COL_LAST_EDITED_DATE] ? new Date(rowData[COL_LAST_EDITED_DATE]).toISOString() : '',
     files: files
   };
+
+  // Add type-specific fields
+  if (entryType === 'gem') {
+    baseObject.version = rowData[COL_VERSION] || '';
+    baseObject.fullPrompt = rowData[COL_FULL_PROMPT] || '';
+    baseObject.sharedUrl = rowData[COL_SHARED_URL] || '';
+  } else if (entryType === 'notebook') {
+    baseObject.notebookUrl = rowData[COL_SHARED_URL] || '';
+    // Optional: include version for notebooks if desired
+    baseObject.version = rowData[COL_VERSION] || '';
+  }
+
+  return baseObject;
 }
